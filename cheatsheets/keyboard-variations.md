@@ -1,0 +1,171 @@
+# Keyboard Variations: Surviving Multiple Laptops
+
+## The Universal Fix: Remap Caps Lock to Ctrl
+
+Do this on every machine before anything else. It is the most important single configuration for Emacs.
+
+| Platform | Method |
+|----------|--------|
+| **Linux (X11)** | `setxkbmap -option ctrl:nocaps` in `~/.bashrc` |
+| **Linux (Wayland)** | Settings → Keyboard → Ctrl key position → Caps Lock as Ctrl |
+| **macOS** | System Preferences → Keyboard → Modifier Keys → Caps Lock → Ctrl |
+| **Windows** | Use [PowerToys Keyboard Manager](https://learn.microsoft.com/en-us/windows/powertoys/) or SharpKeys |
+
+Without this remap, your left pinky travels to the bottom-left corner constantly. With it, Ctrl is right above the left pinky's home row position. The difference is dramatic.
+
+---
+
+## The Laptop Keyboard Problem Map
+
+### Problem: Tiny or Missing Keys
+
+**Right Shift too small** (common on 60%/75% laptops)  
+Some laptops put `↑` next to right Shift, making it tiny. 
+- Consciously reach for the wider key
+- Or remap right Shift in your OS if possible
+- Touch typing means you don't see it anyway — trust your finger position
+
+**Missing F-row keys** (common on MacBooks, ultrabooks)  
+Fn keys may be virtual or require Fn+key combinations.
+- For Emacs, you can avoid F-key bindings entirely (they're optional, not core)
+- Or use `M-x` to run any command by name instead of the F-key shortcut
+- If you use F5 for recompile, just remap it to something else on problem machines:
+  ```elisp
+  (global-set-key (kbd "C-c m") 'recompile)  ; works everywhere
+  ```
+
+**Missing Home/End/PgUp/PgDn keys**  
+These aren't needed in Emacs anyway:
+- `C-a` / `C-e` → beginning/end of line
+- `C-v` / `M-v` → page down/up  
+- `M-<` / `M->` → beginning/end of buffer
+
+**Compact numpad or missing numpad**  
+Rarely relevant for Emacs. Ignore.
+
+---
+
+### Problem: Key Position Differences
+
+**Right Alt vs Meta (Alt)**  
+Emacs uses Meta (`M-`), which is usually the Alt key.
+- On some laptops, only Left Alt works as Meta in terminal emulators
+- Workaround: Use Esc as Meta instead (`Esc` then the key, rather than Alt+key)
+- Or configure your terminal to send Meta: in iTerm2/GNOME Terminal, enable "Use Alt as Meta"
+
+**Ctrl placement after Caps Lock remap**  
+Different laptop form factors mean Caps Lock is in the same physical position across all of them — this is a QWERTY standard. Once you remap it, Ctrl is always in the same relative position.
+
+**Backspace vs Delete**  
+On some laptops, the top-right key is `Delete` (forward delete) not `Backspace`.
+- Emacs: Backspace = `<DEL>` = delete backward character
+- Forward delete = `C-d`
+- If your laptop puts a tiny Backspace somewhere odd, just use `C-h` (which also deletes backward in many Emacs contexts) or remap
+
+---
+
+### Problem: Laptop-Specific Annoyances
+
+**MacBook (all models)**
+
+```
+; Caps Lock → Ctrl: System Preferences → Keyboard → Modifier Keys
+; Option as Meta: In terminal preferences, enable "Use Option as Meta"  
+; Or in iTerm2: Profiles → Keys → Left Option Key → Esc+
+```
+
+MacBook keyboards have good key feel and consistent layout across generations. The main issue is Option/Meta. The Touch Bar models (2016–2021) make F-keys unreliable — use `C-c` prefix bindings instead.
+
+**ThinkPad**
+
+ThinkPad keyboards are generally excellent for Emacs. The TrackPoint in the middle means your hands stay on home row. Main issue:
+
+```
+; Fn key location varies — older ThinkPads put Fn on bottom left
+; which can interfere if you're not careful
+; In BIOS/UEFI: toggle "Fn lock" or "Legacy F-key behavior"
+```
+
+**Surface / Dell XPS / HP Spectre**
+
+Often have shallow key travel. Touch typing is harder on shallow keyboards; slow down more and be precise. The homing bumps on F and J may be subtle — feel for them carefully before each session.
+
+**Chromebook**
+
+No Caps Lock key at all (it's a Search key). Remap Search → Ctrl in ChromeOS settings. The keyboard layout is otherwise close to standard.
+
+---
+
+## Touch Typing Across Different Keyboards
+
+The fundamental principle of touch typing is **relative positioning from home row**, not absolute key memorization. Once your hands find F and J by feel:
+
+- All keys are at defined positions relative to those anchors
+- You don't need to see the keyboard
+- Layout variations matter less than they seem
+
+What actually varies:
+- **Key travel** (depth): Deep keys → more feedback → easier. Shallow keys → need more precision.
+- **Key resistance**: Varies a lot. Higher resistance → slower but more deliberate. Adjust your speed accordingly.
+- **Keyboard width**: 75%, TKL, full size. The alpha keys (letters) are always the same. Symbol keys on 60%/75% may require Fn layer.
+
+**Practice strategy for multi-laptop users:**  
+When switching to an unfamiliar keyboard, spend 2–3 minutes on home-row anchor drills (`fjfjfj`, `asdf jkl;`) before starting real work. This recalibrates your muscle memory to the specific key feel.
+
+---
+
+## Terminal Emulator Configuration
+
+Different terminal emulators affect how Emacs receives key events. Issues to check:
+
+### Common Terminal Issues
+
+**Alt/Meta not working:**
+```
+; iTerm2: Preferences → Profiles → Keys → Left Option Key → Esc+
+; GNOME Terminal: Edit → Preferences → Compatibility → uncheck "Use Alt key"
+; Konsole: Settings → Edit Current Profile → Keyboard → Meta key = Alt
+; Windows Terminal: Set "altGrAliasing": false in settings.json
+```
+
+**Ctrl+Space (set-mark) not working:**
+```
+; Some terminals intercept C-SPC for input methods
+; Workaround: use C-@ instead (does the same thing in Emacs)
+; Or configure your terminal to not intercept it
+```
+
+**C-/ (undo) not working:**
+```
+; Use C-x u instead, which works everywhere
+; Or C-_ (underscore) which is the same Emacs command
+```
+
+### Using Emacs GUI vs Terminal
+
+GUI Emacs (`emacs`) avoids terminal key translation issues entirely. Key events go directly to Emacs.
+
+Terminal Emacs (`emacs -nw`) is more portable, works over SSH, and some people prefer it. Just be aware of the key event limitations above.
+
+**For multi-laptop use:** GUI Emacs is more consistent. But terminal Emacs over SSH is invaluable — learn both.
+
+---
+
+## SSH and Remote Emacs
+
+When working on remote machines:
+
+```bash
+# Option 1: Run Emacs on remote machine
+ssh -Y user@remote   # -Y enables X forwarding for GUI Emacs
+emacs myfile.c       # or emacs -nw for terminal mode
+
+# Option 2: TRAMP — edit remote files locally
+# In Emacs on your local machine:
+C-x C-f /ssh:user@remote:/path/to/file.c
+# Emacs handles the SSH transparently!
+```
+
+TRAMP (Transparent Remote Access, Multiple Protocols) is built into Emacs. You can open, edit, and save remote files as if they were local. Compile and debug remotely too.
+
+This is another reason to be comfortable in terminal Emacs — over SSH with TRAMP, you get your full Emacs configuration on a remote machine's files.
