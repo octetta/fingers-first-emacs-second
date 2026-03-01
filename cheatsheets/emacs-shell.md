@@ -1,5 +1,126 @@
 # Emacs Shell Cheatsheet
 
+## The Acme/Plan 9 Mental Model: Text as Command Surface
+
+If you've spent time with Rob Pike's Acme editor from Plan 9, you'll recognize something familiar in Emacs's shell integration — and you can push it much further than most Emacs users do.
+
+Acme's core idea: **the editor and the shell share the same surface.** Any text can be a command. Any output is text you can act on further. There's no meaningful distinction between "the editor" and "the environment." You middle-click a word to execute it; the output appears as text you can middle-click again.
+
+Emacs doesn't go quite that far architecturally, but it gets surprisingly close. The key insight is that **every piece of output in Emacs is a buffer**, and every buffer is subject to everything Emacs can do to text — search, edit, pipe onward, commit to git, execute as code.
+
+### The Core Primitives (Your Acme Toolkit)
+
+**`M-!` — Run a command, get a buffer**
+
+```
+M-! ls -la          → output appears in *Shell Command Output* buffer
+M-! date            → current date as editable text
+M-! cat notes.txt   → file contents in a buffer you can edit and save elsewhere
+M-! make 2>&1       → build output as navigable text
+```
+
+This is Acme's middle-click on a command string. The output isn't printed and forgotten — it's text. You can search it, copy from it, pipe it onward.
+
+With `C-u` prefix, output inserts at point instead of a separate buffer:
+
+```
+C-u M-! date        → inserts the date at cursor position in current buffer
+C-u M-! cat header_template.c   → inserts file contents at cursor
+```
+
+**`M-|` — Pipe region through a command, replace with output**
+
+Select a region, run a command, the region is replaced by the command's output. This is Acme's pipe operation, and it's extraordinarily powerful for C work:
+
+```
+[select a block of C code]
+M-| clang-format    → reformats selected code in place
+M-| indent          → GNU indent on selection
+M-| sort            → sort selected lines
+M-| uniq            → deduplicate selected lines
+M-| column -t       → align selected text into columns
+M-| python3 -c "import sys; print(len(sys.stdin.read()))"  → count chars in selection
+```
+
+This is the Acme pipe model: text goes in, text comes out, the buffer is the surface.
+
+**Eshell buffer redirection — output as named buffers**
+
+```bash
+# In eshell:
+make 2>&1 > #<buffer build-output>
+grep -rn "TODO" src/ > #<buffer todos>
+find . -name "*.c" | xargs wc -l > #<buffer line-counts>
+nm ./myprogram | grep " T " > #<buffer symbols>
+```
+
+Each of those output buffers is a first-class Emacs buffer. You can search them with `C-s`, run `M-x occur` on them, copy from them, even pipe their contents through further commands with `M-|`. The output of one command becomes the input surface for the next.
+
+**`M-x shell-command-on-region` — the explicit version**
+
+Same as `M-|` but named, runnable from `M-x` when you forget the binding.
+
+### Composing Commands the Acme Way
+
+The real power emerges when you chain these:
+
+**Example: Find all malloc calls in a project, view as editable list**
+```bash
+# In eshell:
+grep -rn "malloc" src/ --include="*.c" > #<buffer mallocs>
+# Switch to that buffer: C-x b mallocs
+# Now M-x occur on "sizeof" to find which ones use sizeof correctly
+# Copy the bad ones, pipe through a script, fix in place
+```
+
+**Example: Generate a struct from a header, insert at point**
+```
+C-u M-! grep "^typedef struct" myheader.h
+→ inserts all struct typedefs at cursor — editable scaffolding
+```
+
+**Example: Format only the function you're editing**
+```
+C-M-h          → mark current function
+M-| clang-format-region   → format just that function
+```
+
+**Example: Check a value without leaving the file**
+```
+M-! python3 -c "print(0xFF & ~0x3C)"
+→ quick bit arithmetic result in a buffer, never left your C file
+```
+
+### Org-Babel: The Closest Thing to Acme's Model
+
+Org-mode's source blocks go furthest toward Acme's vision — executable text inline in a document:
+
+```org
+* Build Notes
+
+Run this to check for memory leaks:
+#+BEGIN_SRC sh
+valgrind --leak-check=full ./myprogram 2>&1 | head -30
+#+END_SRC
+
+#+RESULTS:
+==12345== LEAK SUMMARY:
+==12345==    definitely lost: 0 bytes in 0 blocks
+...
+```
+
+Press `C-c C-c` on the `#+BEGIN_SRC` block: it executes and the output appears in `#+RESULTS:` below it. The document is live. The notes and the commands that verify the notes are the same text.
+
+This is what Acme was pointing at: a surface where the distinction between "documentation," "commands," and "output" dissolves into just *text that does things*.
+
+### The Mental Shift
+
+Once you start using `M-!` and `M-|` regularly, something changes in how you think about the editor. You stop thinking "I need to go to the terminal to do X, then come back." You start thinking "what command would transform this text into what I want?" The buffer is always the surface. The shell is always available. Output is always text.
+
+That's the Acme insight, running inside Emacs.
+
+---
+
 ## Choosing Your Shell Mode
 
 Emacs offers several ways to run shell commands. Each has trade-offs:

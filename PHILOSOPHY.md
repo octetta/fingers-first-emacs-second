@@ -1,6 +1,33 @@
 # Philosophy: Why This Approach Works
 
-This plan was built in a conversation with Claude (an AI assistant by Anthropic), which is itself a small illustration of the argument: when you can think and type faster, you can externalize and structure ideas faster. The meta-story matches the thesis.
+This plan has a specific origin. I built [Skred](https://github.com/octetta/skred), a polyphonic wavetable synthesizer controlled via terse ASCII commands over UDP. Someone asked whether Skred supported live coding via Emacs. That question prompted a session vibe-coding [`skred-emacs-mode`](https://github.com/octetta/skred-emacs-mode) with Claude — a proper major mode with syntax highlighting, persistent UDP client, and inline result overlays. Around the same time, a conversation on jart's Discord touched on Emacs, touch typing, and handedness.
+
+The combination made something click: I'd been circling Emacs for years, and the obstacle wasn't Emacs — it was that hunt-and-peck typing and complex key chords are a genuinely bad combination. You can't build muscle memory for `C-M-f` when you're looking at the keyboard to find `f`. The plan in this repo came out of describing exactly that problem to Claude in a single conversation. The meta-story matches the thesis: building a synthesizer mode in one vibe-coding session is an argument for learning the tools that let you think faster.
+
+## The Vi User's Specific Situation
+
+Coming from vi (or vim, or vile) adds a wrinkle. You have decades of modal editing muscle memory. The question everyone asks is: why not Evil mode?
+
+Because Evil mode solves a different problem. It's for vi users who want Emacs's power *without* changing their habits. This plan is for someone who has decided to change their habits. Routing everything through Evil means you're learning vi-in-Emacs rather than Emacs — and you'd be building three sets of muscle memory (vi modal, Emacs chords, touch typing) instead of two.
+
+The vi background is also genuinely useful: you already understand that an editor can be an entire environment, that deep keyboard investment pays off, that text is manipulable at a structural level. Those intuitions transfer. The `hjkl` reflexes don't — but they fade faster than you expect when you're using the real thing daily.
+
+See `VI-USERS.md` for a full treatment, including a translation table of vi habits to Emacs equivalents.
+
+## The Acme Insight: Text as Command Surface
+
+Rob Pike's Acme editor from Plan 9 had a radical idea: the editor and the shell share the same surface. Any text can be a command. Any output is text you can act on further. There's no meaningful distinction between "the editor" and "the environment."
+
+Emacs doesn't go quite that far architecturally, but it gets surprisingly close — and closer than almost any other editor available today. The key primitives:
+
+- `M-!` runs a shell command and drops the output into a buffer. This is Acme's middle-click on a command string.
+- `M-|` pipes the selected region through a command and replaces it with the output. Select a messy block of C, pipe through `clang-format`, done. This is Acme's pipe operation.
+- Eshell's `> #<buffer>` redirect sends command output to a named Emacs buffer you can then edit, search, or act on as text.
+- Org-mode's `#+BEGIN_SRC` blocks let you execute code inline and capture output in the document — closer to Acme's model than most people realize.
+
+The philosophical point: in Emacs, output is never just output. It's text in a buffer, which means it's subject to everything Emacs can do to text — search, edit, pipe onward, commit to version control. Once this clicks, the shell integration stops feeling like a convenience feature and starts feeling like the point.
+
+See `cheatsheets/emacs-shell.md` for the full Acme-inspired workflow.
 
 ## The Hunt-and-Peck Expert Problem
 

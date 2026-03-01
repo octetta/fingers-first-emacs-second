@@ -20,9 +20,10 @@ This repo is a structured 90-day plan to simultaneously learn touch typing and E
 .
 ├── README.md                     ← You are here
 ├── PHILOSOPHY.md                 ← Why this approach works
+├── VI-USERS.md                   ← For vi/vim/vile users: why not Evil mode
 ├── weeks/
-│   ├── week-01-02.md            ← Home row & Emacs survival
-│   ├── week-03-04.md            ← Top row & basic editing
+│   ├── week-01-02.md            ← Home row, Dired & Emacs survival
+│   ├── week-03-04.md            ← Top row, Magit & basic editing
 │   ├── week-05-06.md            ← Bottom row & buffers/windows
 │   ├── week-07-08.md            ← Numbers, symbols & shell/eshell
 │   ├── week-09-10.md            ← C symbols deep dive & org-mode
@@ -30,7 +31,7 @@ This repo is a structured 90-day plan to simultaneously learn touch typing and E
 │   └── week-13.md               ← Integration & your init.el
 ├── cheatsheets/
 │   ├── emacs-survival.md        ← The 20 commands you need day 1
-│   ├── emacs-shell.md           ← Shell, eshell, term, vterm
+│   ├── emacs-shell.md           ← Shell, eshell, Acme-style text/command surface
 │   ├── emacs-c-programming.md   ← C mode, compile, debug, navigate
 │   ├── c-symbols-typing.md      ← Drilling {, }, *, ->, :: and friends
 │   └── keyboard-variations.md   ← Surviving laptop keyboard chaos
@@ -87,11 +88,15 @@ Laptop keyboards vary in annoying ways — function key rows, Ctrl placement, mi
 
 ## Origin
 
-This plan was developed in a single conversation with Claude, an AI assistant made by Anthropic. The structure, drills, and philosophy emerged from describing a very specific problem: a programmer with decades of experience, no touch typing, a complicated history with Emacs, multiple laptops, and a lot of C code to write.
+This plan has a specific origin story, which is worth telling because it might resonate with other people in similar situations.
 
-The repo is the result. I'm doing the plan myself — follow along or check the log linked below.
+I've been programming for decades — C, embedded systems, synthesizers — without ever learning to touch type. I built [Skred](https://github.com/octetta/skred), a polyphonic wavetable synthesizer controlled via terse ASCII commands over UDP. Someone asked whether Skred supported live coding via Emacs. That question prompted me to vibe-code [`skred-emacs-mode`](https://github.com/octetta/skred-emacs-mode) — a proper Emacs major mode with syntax highlighting, a persistent UDP client, and inline result overlays — using Claude as the coding partner.
 
-> *Generating a 90-day curriculum in one conversation is itself a decent argument for learning the tools that let you think faster.*
+Around the same time, a conversation on [jart's](https://github.com/jart) Discord server touched on Emacs, touch typing, and handedness. The combination of that conversation and the Skred live coding question made something click: I'd been circling Emacs for years and the thing stopping me wasn't Emacs — it was that hunt-and-peck typing and complex key chords are a bad combination. You can't build muscle memory for `C-M-f` when you're looking at the keyboard to find `f`.
+
+The plan in this repo came out of a single conversation with Claude (an AI assistant made by Anthropic), describing exactly that problem. I'm doing it myself — follow the log below.
+
+> *Vibe-coding a synthesizer mode in one session is a decent argument for learning the tools that let you think faster. This repo is the next step.*
 
 ## My Progress Log
 
