@@ -2,30 +2,120 @@
 
 ## The Universal Fix: Remap Caps Lock to Ctrl
 
-Do this on every machine before anything else. It is the most important single configuration for Emacs.
+Do this on every machine before anything else. It is the most important single configuration for Emacs. Without it, your left pinky travels to the bottom-left corner constantly. With it, Ctrl is right above the left pinky's home row position.
+
+**The old advice (`setxkbmap -option ctrl:nocaps`, `~/.Xmodmap`) does not work on Wayland**, which is the default on modern Fedora and many other current distros.
+
+### Fedora / GNOME on Wayland — the dconf method
+
+Recommended for Fedora 38+. Takes effect immediately, survives reboots:
+
+```bash
+dconf write /org/gnome/desktop/input-sources/xkb-options "['ctrl:nocaps']"
+```
+
+Verify it stuck:
+```bash
+gsettings get org.gnome.desktop.input-sources xkb-options
+# should print: ['ctrl:nocaps']
+```
+
+To undo:
+```bash
+gsettings reset org.gnome.desktop.input-sources xkb-options
+```
+
+If you already have other xkb-options (like a compose key), preserve them:
+```bash
+dconf write /org/gnome/desktop/input-sources/xkb-options "['ctrl:nocaps', 'compose:ralt']"
+```
+
+### Fedora / GNOME — GUI alternative
+
+```bash
+sudo dnf install gnome-tweaks
+```
+Open GNOME Tweaks → Keyboard → Additional Layout Options → Ctrl key position → Caps Lock as Ctrl.
+
+### keyd — Works Everywhere Including TTY
+
+`keyd` is a kernel-level remapper that works regardless of display server (Wayland, X11, or bare TTY). Best option if dconf isn't sticking, or if you need the remap outside a desktop session.
+
+```bash
+# Install via COPR (not in main Fedora repos yet):
+sudo dnf copr enable alternateved/keyd
+sudo dnf install keyd
+```
+
+Create `/etc/keyd/default.conf`:
+```ini
+[ids]
+*
+
+[main]
+capslock = leftcontrol
+```
+
+Enable and start:
+```bash
+sudo systemctl enable keyd
+sudo systemctl start keyd
+```
+
+**Bonus — dual function (Ctrl when held, Escape when tapped):**
+```ini
+[ids]
+*
+
+[main]
+capslock = overload(control, esc)
+```
+Useful if vi muscle memory is bleeding over and you want Escape on the same key.
+
+### TTY Console Sessions
+
+If you need the remap in a TTY outside any desktop:
+```bash
+sudo localectl set-x11-keymap us "" "" ctrl:nocaps
+# Replace 'us' with your actual layout if different
+```
+
+### Other Platforms
+
+| Platform | Method |
+|----------|--------|
+| **Linux (X11 only)** | `setxkbmap -option ctrl:nocaps` in `~/.bashrc` |
+| **macOS** | System Settings → Keyboard → Keyboard Shortcuts → Modifier Keys → Caps Lock → Ctrl |
+| **Windows** | [PowerToys Keyboard Manager](https://learn.microsoft.com/en-us/windows/powertoys/) or SharpKeys |
+
+### What Doesn't Work on Modern Fedora
+
+```bash
+# X11-only — NO EFFECT under Wayland:
+setxkbmap -option ctrl:nocaps        # ✗
+~/.Xmodmap                           # ✗ not loaded
+```
+
+Check which session type you're in:
+```bash
+echo $XDG_SESSION_TYPE   # 'wayland' or 'x11'
+```
+
+---
 
 ## Forcing the Issue: Keyboard Stickers
 
 If you want to make it physically impossible to revert to hunt-and-peck, blank keyboard stickers are more committed than a cloth. You can still feel the keys — the bumps on F and J remain your anchors — but visual lookup becomes impossible.
 
-Search for "blank keyboard stickers" or "black keyboard stickers" — they're cheap, widely available, and fit most laptop key sizes. A practical approach:
+Search for "blank keyboard stickers" or "black keyboard stickers" — cheap, widely available, fit most laptop key sizes. A practical approach:
 
 1. Start by blanking letters only (leave symbols visible while you build letter memory)
 2. Once letters are solid, blank the number row
 3. Finally blank the symbol keys as your C symbol muscle memory develops
 
-This is the "point of no return" approach described by Hakan Serce in [his guide for seasoned hunt-and-peckers](https://blog.hakanserce.com/post/how-to-learn-touch-typing-a-guide-for-seasoned-hunt-and-pecker/). It works because it removes the option to cheat rather than relying on willpower to resist it.
+This is the "point of no return" approach from Hakan Serce's [guide for seasoned hunt-and-peckers](https://blog.hakanserce.com/post/how-to-learn-touch-typing-a-guide-for-seasoned-hunt-and-pecker/). It removes the option to cheat rather than relying on willpower to resist it.
 
-Note: if you use multiple laptops, stickers on all of them is the only consistent approach. Stickers on one and bare keys on another means you're still maintaining the visual lookup reflex on the unstickered machines.
-
-| Platform | Method |
-|----------|--------|
-| **Linux (X11)** | `setxkbmap -option ctrl:nocaps` in `~/.bashrc` |
-| **Linux (Wayland)** | Settings → Keyboard → Ctrl key position → Caps Lock as Ctrl |
-| **macOS** | System Preferences → Keyboard → Modifier Keys → Caps Lock → Ctrl |
-| **Windows** | Use [PowerToys Keyboard Manager](https://learn.microsoft.com/en-us/windows/powertoys/) or SharpKeys |
-
-Without this remap, your left pinky travels to the bottom-left corner constantly. With it, Ctrl is right above the left pinky's home row position. The difference is dramatic.
+Note: stickers on all your laptops or none. Stickered on one machine and bare keys on another means you're still maintaining the visual lookup reflex on the unstickered machines.
 
 ---
 
