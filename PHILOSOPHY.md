@@ -29,6 +29,32 @@ The philosophical point: in Emacs, output is never just output. It's text in a b
 
 See `cheatsheets/emacs-shell.md` for the full Acme-inspired workflow.
 
+## The Real Argument for Touch Typing
+
+Most people frame the case for touch typing around speed and accuracy. Those matter, but they're not the strongest argument.
+
+The strongest argument is **cognitive load**.
+
+Think about learning to drive. The first time, everything demands conscious attention — mirrors, pedals, steering, other cars, the rules. Turning the radio on feels dangerous. Years later, you drive long distances while holding a conversation, your hands and feet working without conscious direction. The mechanics became automatic, freeing your mind for everything else.
+
+Touch typing works the same way. A hunt-and-pecker types by solving a constant stream of small problems: where is the `{`? Did I get that `->` right? Where's the semicolon? Each lookup is cheap, but they're continuous, and they occupy exactly the working memory you need for the actual problem you're solving — the logic, the design, the debugging.
+
+When typing becomes automatic, it stops consuming that working memory. You think and type simultaneously rather than alternately. The keyboard becomes transparent in the same way a fluent reader doesn't see individual letters.
+
+For programmers specifically, this matters more than WPM. You're not transcribing — you're composing. The cognitive tax of hunt-and-peck lands precisely when your mind is most loaded.
+
+*Further reading: Hakan Serce's [Do Programmers Actually Need Touch Typing?](https://blog.hakanserce.com/post/do-programmers-actually-need-touch-typing/) makes this case well, including a concrete account of the moment it clicked for him.*
+
+## The "Two Lives" Reality
+
+The guide asks you to use Emacs for real work starting week one. That's the right long-term approach, but be honest with yourself about the short term: if you have deadlines, interviews, or any situation where your typing speed is load-bearing for someone else, you may need to keep hunt-and-peck available during working hours while practicing touch typing outside them.
+
+This isn't failure. It's a practical bridge. Hakan Serce describes it as "living two lives" — hunt-and-pecker during the day, touch typist in the evenings — until touch typing reaches roughly two-thirds of your hunt-and-peck speed. At that point you make the switch permanently.
+
+The switch is easier if you make it physically hard to revert. A cloth over your hands works for practice sessions. For the permanent switch, blank keyboard stickers (available cheaply online) are more committed — you can still feel the keys, but visual lookup becomes impossible. Some people start by blanking letters only, then add symbols as their muscle memory solidifies.
+
+The key insight: don't try to suppress the hunt-and-peck reflex through willpower during your working day. Let it serve you there while you build the replacement. The new habit accumulates in dedicated practice, then overtakes the old one through sheer repetition.
+
 ## The Hunt-and-Peck Expert Problem
 
 You've been programming for decades. You're fast — maybe faster than you think — at finding keys visually. Your brain has deep shortcuts: you know where `;` is, where `->` lives, where `{` hides. This is the problem.

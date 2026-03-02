@@ -44,11 +44,15 @@ emacs --version
 ## Typing Tutor Tools
 
 ### Online (no install)
+- [typingclub.com](https://www.typingclub.com) — structured lesson progression (lessons 1-188 cover basics through shift key); good for complete beginners or people who want a clear syllabus rather than adaptive training
 - [keybr.com](https://www.keybr.com) — smart adaptive training, highly recommended
 - [monkeytype.com](https://monkeytype.com) — speed testing, code mode available
 - [typing.com](https://www.typing.com) — structured lessons, free
-- [typeracer.com](https://www.typeracer.com) — competitive, fun after week 6
-- [speedcoder.net](https://www.speedcoder.net) — specifically for code typing (C, Python, etc.)
+- [typeracer.com](https://www.typeracer.com) — competitive, fun after week 6; good for motivation
+- [ratatype.com](https://www.ratatype.com) — focused on accuracy and muscle memory for symbols; particularly good for `[]`, `{}`, `|` and other programmer punctuation that other sites neglect
+- [typing.io](https://www.typing.io) — typing practice specifically using real source code; supports C, C++, and many other languages; use from week 7 onward
+
+**Suggested progression:** typingclub.com for weeks 1-3 (structured foundation), keybr.com for weeks 4-8 (adaptive refinement), typeracer.com and typing.io from week 6 onward (speed and code-specific practice), ratatype.com whenever symbols feel weak.
 
 ### Command Line (install once)
 ```bash
@@ -153,6 +157,10 @@ which clangd ctags rg valgrind gdb make gcc
 
 ## Learning Resources
 
+### Eshell Specifically
+- [Eschewing Zshell for Emacs Shell](https://www.howardism.org/Technical/Emacs/eshell-fun.html) — Howard Abrams' deep dive; the source of the `eshell-here` pattern, glob predicates, and Plan 9 smart display mode used in this guide
+- [Mastering Eshell](https://www.masteringemacs.org/article/complete-guide-mastering-eshell) — Mickey Petersen's comprehensive reference (free article)
+
 ### Emacs Documentation
 - [Emacs Manual](https://www.gnu.org/software/emacs/manual/emacs.html) — comprehensive, official
 - [Emacs Lisp Reference](https://www.gnu.org/software/emacs/manual/elisp.html) — when you're ready to customize
@@ -164,7 +172,8 @@ which clangd ctags rg valgrind gdb make gcc
 - [CC Mode Manual](https://www.gnu.org/software/emacs/manual/ccmode.html)
 
 ### Touch Typing
-- [The Typing Cure](https://www.typingcure.com/) — focused on retraining (not beginner)
+- [Do Programmers Actually Need Touch Typing?](https://blog.hakanserce.com/post/do-programmers-actually-need-touch-typing/) — Hakan Serce; the best short case for why cognitive load, not speed, is the real argument
+- [How to Learn Touch Typing: a Guide for Seasoned Hunt and Pecker](https://blog.hakanserce.com/post/how-to-learn-touch-typing-a-guide-for-seasoned-hunt-and-pecker/) — Serce's follow-up; the "two lives" method, blank stickers, and a realistic progression that this guide draws on
 - Any of the online tools above have their own learning resources
 
 ### Community

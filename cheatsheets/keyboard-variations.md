@@ -4,6 +4,20 @@
 
 Do this on every machine before anything else. It is the most important single configuration for Emacs.
 
+## Forcing the Issue: Keyboard Stickers
+
+If you want to make it physically impossible to revert to hunt-and-peck, blank keyboard stickers are more committed than a cloth. You can still feel the keys — the bumps on F and J remain your anchors — but visual lookup becomes impossible.
+
+Search for "blank keyboard stickers" or "black keyboard stickers" — they're cheap, widely available, and fit most laptop key sizes. A practical approach:
+
+1. Start by blanking letters only (leave symbols visible while you build letter memory)
+2. Once letters are solid, blank the number row
+3. Finally blank the symbol keys as your C symbol muscle memory develops
+
+This is the "point of no return" approach described by Hakan Serce in [his guide for seasoned hunt-and-peckers](https://blog.hakanserce.com/post/how-to-learn-touch-typing-a-guide-for-seasoned-hunt-and-pecker/). It works because it removes the option to cheat rather than relying on willpower to resist it.
+
+Note: if you use multiple laptops, stickers on all of them is the only consistent approach. Stickers on one and bare keys on another means you're still maintaining the visual lookup reflex on the unstickered machines.
+
 | Platform | Method |
 |----------|--------|
 | **Linux (X11)** | `setxkbmap -option ctrl:nocaps` in `~/.bashrc` |
@@ -153,19 +167,10 @@ Terminal Emacs (`emacs -nw`) is more portable, works over SSH, and some people p
 
 ## SSH and Remote Emacs
 
-When working on remote machines:
+When working on remote machines you have two options: run Emacs on the remote machine directly over SSH, or use TRAMP to edit remote files from your local Emacs. See `cheatsheets/emacs-shell.md` for a full treatment of TRAMP — it's the more powerful option and worth learning properly.
 
 ```bash
-# Option 1: Run Emacs on remote machine
+# Run Emacs on remote machine directly:
 ssh -Y user@remote   # -Y enables X forwarding for GUI Emacs
 emacs myfile.c       # or emacs -nw for terminal mode
-
-# Option 2: TRAMP — edit remote files locally
-# In Emacs on your local machine:
-C-x C-f /ssh:user@remote:/path/to/file.c
-# Emacs handles the SSH transparently!
 ```
-
-TRAMP (Transparent Remote Access, Multiple Protocols) is built into Emacs. You can open, edit, and save remote files as if they were local. Compile and debug remotely too.
-
-This is another reason to be comfortable in terminal Emacs — over SSH with TRAMP, you get your full Emacs configuration on a remote machine's files.

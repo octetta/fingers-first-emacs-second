@@ -139,54 +139,187 @@ Emacs offers several ways to run shell commands. Each has trade-offs:
 
 ## Eshell
 
-Eshell is unique — it's implemented in Emacs Lisp and understands both shell syntax and Emacs commands natively.
+Eshell is unique — it's implemented in Emacs Lisp and understands both shell syntax and Emacs commands natively. It has no pager because it doesn't need one: output is a buffer, and you navigate it with Emacs. A good deeper reference is Howard Abrams' essay [Eschewing Zshell for Emacs Shell](https://www.howardism.org/Technical/Emacs/eshell-fun.html).
+
+### The `eshell-here` Pattern — Context-Aware Shell
+
+The most useful eshell setup: a function that opens a shell in the directory of whatever file you're currently editing, in a split window at the bottom third of the screen. Add this to your `init.el`:
+
+```elisp
+(defun eshell-here ()
+  "Open eshell in the directory of the current buffer's file,
+in a window taking up the bottom third of the frame."
+  (interactive)
+  (let* ((parent (if (buffer-file-name)
+                     (file-name-directory (buffer-file-name))
+                   default-directory))
+         (height (/ (window-total-height) 3))
+         (name   (car (last (split-string parent "/" t)))))
+    (split-window-vertically (- height))
+    (other-window 1)
+    (eshell "new")
+    (rename-buffer (concat "*eshell: " name "*"))
+    (insert (concat "ls"))
+    (eshell-send-input)))
+
+(global-set-key (kbd "C-!") 'eshell-here)
+
+;; Type 'x' in eshell to close it and its window
+(defun eshell/x ()
+  (insert "exit")
+  (eshell-send-input)
+  (delete-window))
+```
+
+`C-!` drops you into a shell already in your project directory. `x` closes it and returns focus to your code. This is the everyday workflow — not a persistent shell but a quick pop-out-and-back.
 
 ### Launching and Navigating
 
 ```bash
 M-x eshell          # open eshell (or reuse existing)
+C-!                 # context-aware eshell (if you added above)
 C-c s               # if you added this binding to init.el
 
-# Inside eshell, standard navigation applies:
+# Navigation:
 C-p / M-p           # previous command
 C-n / M-n           # next command
 C-r                 # search command history
 M-r                 # regexp search history
+
+# Navigate output without a pager — you don't need less/more:
+C-c C-p             # jump to top of last command's output
+C-v                 # scroll down from there
+C-s                 # search through output
 ```
 
-### Eshell-Specific Features
+### Plan 9 Smart Display Mode
 
-**Output to buffer:**
+Enable this for an Acme-like experience — output starts at the top automatically, and you only drop to the prompt when you start typing:
+
+```elisp
+(require 'eshell)
+(require 'em-smart)
+(setq eshell-where-to-jump 'begin)
+(setq eshell-review-quick-commands nil)
+(setq eshell-smart-space-goes-to-end t)
+```
+
+### Output to Buffers
+
 ```bash
-ls -la > #<buffer my-listing>       # send output to named buffer
-grep -r "TODO" . >> #<buffer todos> # append to buffer
+ls -la > #<buffer my-listing>        # send output to named buffer
+grep -r "TODO" . >> #<buffer todos>  # append to buffer
 find . -name "*.c" > #<buffer c-files>
+ls -al > #<buffer notes.org>         # then C-c | in that buffer for an org table
 ```
 
-**Run Emacs commands from eshell:**
+### Run Emacs Commands Directly
+
 ```bash
 find-file ~/projects/foo/main.c     # open file in Emacs
 dired ~/projects/                   # open directory in Dired
 magit-status                        # open Magit
 switch-to-buffer *scratch*
+highlight-regexp "ERROR"            # colorize keywords in an output buffer
 ```
 
-**Lisp expressions:**
+### Lisp Expressions — Eshell is a REPL
+
 ```bash
 (+ 2 3)               # → 5
 (length "hello")      # → 5
 (getenv "PATH")       # → your PATH
 (emacs-version)       # → Emacs version string
+message "hello"       # parens optional for top-level calls
+setq CC "clang"       # set an Emacs variable
+echo $CC              # → clang
+echo $recentf-max-menu-items   # access any Emacs variable with $
 ```
 
-**Globbing (more powerful than bash):**
+### Globbing — More Powerful Than Bash
+
 ```bash
 ls **/*.c              # recursive glob — all .c files
 ls **/test-*.c         # recursive with pattern
 rm **/*.o              # delete all object files recursively
+ls ***/*.sh            # recursive without following symlinks
 ```
 
-**Eshell aliases** (add to `~/.emacs.d/eshell/aliases`):
+### Glob Predicates — Eshell's Secret Weapon
+
+Filter files by attributes directly in the glob pattern. Run `eshell-display-predicate-help` for the full list:
+
+```bash
+ls *(/)           # directories only
+ls *(.)           # regular files only
+ls *(*)           # executable files only
+ls *(@)           # symlinks only
+ls *(U)           # files owned by you
+ls *(IW)          # writable by group or world
+ls *.c(m-1)       # .c files modified in the last day
+ls *.org(mh-8)    # .org files modified in last 8 hours
+bzip2 **/*(a+30)  # compress everything not accessed in 30 days
+ls *.sh(*Lk+50)   # executable .sh files 50KB or larger
+ls *(@^U)         # symlinks NOT owned by you
+```
+
+Predicates stack: `ls **/*(IW)` — all files recursively writable by group or world. Good for security audits.
+
+### Glob Modifiers — Transform Filenames in Place
+
+Run `eshell-display-modifier-help` for the full list:
+
+```bash
+echo $filename(:r)        # strip extension  (foo.c → foo)
+echo $filename(:e)        # just the extension  (foo.c → c)
+echo $filename(:t)        # basename  (/path/foo.c → foo.c)
+echo $filename(:h)        # dirname  (/path/foo.c → /path)
+echo $filename(:U)        # uppercase
+echo $filename(:L)        # lowercase
+
+# Practical: rename all .c files, append -old before extension
+for F in *.c { mv $F $F(:r)-old.$F(:e) }
+# foo.c → foo-old.c
+
+# List modifiers
+ls *(:o)                  # sort alphabetically
+echo $mylist(:j/, /)      # join list with ", " separator
+echo $mylist(:x/foo/)     # exclude members matching "foo"
+```
+
+### Loops
+
+```bash
+for file in *.c {
+  echo "Checking: $file"
+  gcc -Wall -fsyntax-only $file
+}
+
+for i in 1 2 3 4 { echo $i }
+
+# Combine globs, predicates, and loops:
+for f in src/**/*.c(m-7) { echo "Recently modified: $f" }
+```
+
+### Visual Commands — When Eshell Hands Off
+
+Programs that use terminal control codes won't work in eshell's text buffer. Eshell maintains `eshell-visual-commands` — when you run one of these, eshell automatically opens a proper `term` buffer instead:
+
+```bash
+top     # eshell notices and opens in term automatically
+htop    # same
+vim     # same
+man     # same
+```
+
+Add your own:
+```elisp
+(add-to-list 'eshell-visual-commands "mycurses-app")
+```
+
+### Aliases
+
+Add to `~/.emacs.d/eshell/aliases`:
 ```bash
 alias ll ls -la $*
 alias la ls -a $*
@@ -196,35 +329,32 @@ alias mr make $*
 alias mct make clean && make test $*
 ```
 
-**Redirect to clip/selection:**
-```bash
-echo "hello" > /dev/kill           # send to kill ring (Emacs clipboard)
-cat file.txt > /dev/kill
-```
-
 ### Eshell C Development Workflow
 
 ```bash
-# Navigate to project
-cd ~/projects/libfoo
+# C-! to open context-aware shell — already in the right directory
 
-# Check status
-git status        # runs real git
-# or:
-magit-status      # opens Magit
-
-# Build
+# Build and capture errors
 make clean && make
 
-# Run tests
-./test_suite --verbose 2>&1 | head -50
+# Run tests, send failures to a buffer for review
+./test_suite --verbose 2>&1 | grep FAIL > #<buffer test-failures>
+# C-x b test-failures to review
 
-# Check for memory errors
+# Memory errors
 valgrind --leak-check=full ./myprogram
 
-# Search for TODO items, send to buffer
+# Find all TODO/FIXME/HACK, send to buffer, click lines to jump
 grep -rn "TODO\|FIXME\|HACK" --include="*.c" --include="*.h" . > #<buffer todos>
-# Then: C-x b todos to review them
+
+# Find large leftover object files (predicate: Lk+100 = over 100KB)
+ls **/*.o(Lk+100)
+
+# Clean them all
+rm **/*.o
+
+# Security check: world-writable files in project
+ls **/*(W)
 ```
 
 ---
@@ -335,7 +465,157 @@ M-x recompile       # reruns last compile command (bind to <F5>)
 
 ---
 
-## Combining Shell and Emacs: The Power Pattern
+## TRAMP: Your Entire Emacs Environment, Anywhere
+
+TRAMP (Transparent Remote Access, Multiple Protocols) is built into Emacs and is one of its most quietly powerful features. The core idea: `C-x C-f` doesn't know or care whether the file is local or on a machine three timezones away. You get your full editing environment — keybindings, config, Magit, compile mode, eshell — working on remote files without logging into a separate session.
+
+This matters especially if you work across multiple laptops. Your Emacs config travels with you locally; TRAMP means your Emacs config also travels to every server you touch.
+
+### Basic Usage
+
+```
+C-x C-f /ssh:user@hostname:/path/to/file.c
+```
+
+That's it. Emacs opens an SSH connection, fetches the file, and you edit it locally. Saving sends it back. The file feels local because to Emacs it is local — it's just a buffer.
+
+**Shorthand if your SSH config has aliases:**
+```
+C-x C-f /ssh:myserver:/path/to/file.c
+```
+
+TRAMP reads your `~/.ssh/config`, so any Host aliases, IdentityFile settings, or ProxyJump directives you have there work automatically.
+
+**Open a directory in Dired over TRAMP:**
+```
+C-x d /ssh:user@hostname:/path/to/project/
+```
+
+Navigate the remote filesystem exactly as you would locally. Create files, rename them, delete them — all via Dired, all transparently over SSH.
+
+### sudo and su
+
+Edit files requiring root on a remote machine:
+
+```
+# sudo on local machine:
+C-x C-f /sudo::/etc/hosts
+
+# sudo on remote machine (pipe through SSH then sudo):
+C-x C-f /ssh:user@hostname|sudo:hostname:/etc/nginx/nginx.conf
+```
+
+The `|` chains methods. Read it as: "SSH to hostname as user, then sudo on hostname to open the file." This is the pattern for editing system config on remote servers without a separate root SSH session.
+
+### Multi-Hop Connections
+
+Reach machines that aren't directly accessible — jump hosts, internal networks, anything your SSH config handles:
+
+```
+# Two hops: local → jumphost → internal-server
+C-x C-f /ssh:user@jumphost|ssh:user@internal-server:/path/to/file.c
+
+# Three hops:
+C-x C-f /ssh:jump1|ssh:jump2|ssh:target:/path/file.c
+```
+
+Or configure it once in `~/.ssh/config` using `ProxyJump` and let TRAMP use a simple `/ssh:target:/path` with the hops handled invisibly.
+
+### What Works Over TRAMP
+
+This is the part that surprises people. It's not just file editing:
+
+**Dired** — full filesystem navigation, file operations, bulk rename, everything. The remote directory is just a Dired buffer.
+
+**Magit** — open a TRAMP buffer in a remote git repo and `C-x g` works. You're running Magit against the remote repo, seeing remote git history, staging and committing remotely, all from your local Emacs with your local Magit config.
+
+**Compile mode** — `M-x compile` runs the compile command on the remote machine. Errors link back to remote files which TRAMP opens transparently. The full `<f5>` → error navigation loop works remotely.
+
+**Eshell** — `M-x eshell` while visiting a TRAMP buffer opens a shell on the remote machine. Commands run there, output comes back as a buffer.
+
+**Shell** — `M-x shell` similarly opens on the remote host when called from a TRAMP buffer.
+
+**grep / rgrep** — searches the remote filesystem. Results link to remote files.
+
+### Performance Tuning
+
+TRAMP can feel slow on high-latency connections or large directories. These settings help considerably:
+
+```elisp
+;; In init.el:
+
+;; Cache remote file attributes aggressively
+(setq tramp-completion-reread-directory-timeout nil)
+
+;; Use ssh ControlMaster to reuse connections (fastest option)
+;; Requires OpenSSH — add to ~/.ssh/config:
+;;   Host *
+;;     ControlMaster auto
+;;     ControlPath ~/.ssh/cm-%r@%h:%p
+;;     ControlPersist 10m
+;; Then tell TRAMP to use it:
+(setq tramp-ssh-controlmaster-options
+      (concat "-o ControlPath=~/.ssh/cm-%%r@%%h:%%p "
+              "-o ControlMaster=auto "
+              "-o ControlPersist=10m"))
+
+;; Disable version control checks on remote files (big speedup)
+(setq vc-ignore-dir-regexp
+      (format "\\(%s\\)\\|\\(%s\\)"
+              vc-ignore-dir-regexp
+              tramp-file-name-regexp))
+
+;; Use /tmp for TRAMP temp files (faster than default)
+(setq tramp-auto-save-directory "/tmp/tramp-autosave/")
+
+;; Verbose logging only when debugging (0 = silent, 6 = verbose)
+(setq tramp-verbose 1)
+```
+
+**The single biggest speedup:** SSH ControlMaster in your `~/.ssh/config`. Once the first connection is established, subsequent TRAMP operations reuse the socket instead of re-authenticating. On a slow connection this is the difference between TRAMP being frustrating and it being seamless.
+
+### Practical Workflow: Multi-Laptop + Remote Servers
+
+With TRAMP, the multi-laptop situation becomes an asset rather than a complication. Your workflow:
+
+1. Any laptop → open Emacs with your config
+2. `C-x d /ssh:devserver:/projects/libfoo/` → browse remote project in Dired
+3. Open files, edit with full local keybindings and config
+4. `C-x g` → Magit on the remote repo
+5. `<f5>` → compile on the remote machine, errors navigate back to remote files
+6. `M-x eshell` → shell on the remote machine for anything else
+
+You never SSH into a separate terminal. You never lose your editor config. The remote machine is just another surface your Emacs is editing.
+
+This is the Acme insight applied to network transparency: the distinction between "local file" and "remote file" dissolves into just *a path that Emacs can open*.
+
+### TRAMP Troubleshooting
+
+**Connection hangs on open:**
+Check that your SSH connection works manually first (`ssh user@host`). TRAMP inherits all SSH issues. Also check that the remote shell doesn't print anything to stdout on login (`.bashrc` output breaks TRAMP's handshake — guard it with `[[ $- == *i* ]]` before any echo statements).
+
+**"Tramp: Waiting for prompts from remote shell" forever:**
+Your remote `.bashrc` or `.bash_profile` is printing something unexpected. Add this guard around any output in your remote shell config:
+```bash
+# Only print things in interactive shells
+if [[ $- == *i* ]]; then
+    echo "welcome message or whatever"
+fi
+```
+
+**Slow directory listings:**
+```elisp
+(setq tramp-use-ssh-controlmaster-options t)
+```
+And ensure ControlMaster is configured in `~/.ssh/config` as above.
+
+**Check what TRAMP is doing:**
+```
+M-x tramp-cleanup-all-connections   ; reset all connections
+M-x tramp-bug                       ; generate bug report with diagnostics
+(setq tramp-verbose 6)              ; temporary verbose logging
+```
+
 
 The real power is switching between shell and editing without friction:
 
